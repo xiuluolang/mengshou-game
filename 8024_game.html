@@ -1,0 +1,1226 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="萌兽合成">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <link rel="manifest" href="manifest.json">
+    <title>🐉 萌兽合成大闯关</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); 
+            min-height: 100vh; 
+            padding: 20px; 
+            color: #fff; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+        }
+        .game-container {
+            max-width: 450px;
+            width: 100%;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        .header h1 {
+            font-size: 2.2em;
+            background: linear-gradient(135deg, #ffd700 0%, #ff8c00 50%, #ff4500 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .header p {
+            color: #aaa;
+            font-size: 1em;
+        }
+        .score-panel {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+        .score-box {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 12px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .score-box label {
+            font-size: 0.8em;
+            color: #aaa;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .score-box .value {
+            font-size: 1.6em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .props-panel {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .prop-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+            min-width: 90px;
+        }
+        .prop-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        .prop-btn.active {
+            border-color: #ffd700;
+            background: rgba(255, 215, 0, 0.2);
+        }
+        .prop-btn.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .prop-icon {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .prop-name {
+            font-size: 0.85em;
+            color: #fff;
+            margin-bottom: 3px;
+        }
+        .prop-count {
+            font-size: 0.75em;
+            color: #ffd700;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        .get-props-panel {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        .btn-ad, .btn-share {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-ad {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            color: white;
+        }
+        .btn-ad:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.4);
+        }
+        .btn-share {
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+        }
+        .btn-share:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.4);
+        }
+        .btn-share.disabled {
+            background: #666;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .btn-share.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        .btn-ad-icon, .btn-share-icon {
+            font-size: 1.2em;
+        }
+        .share-count {
+            width: 100%;
+            text-align: center;
+            font-size: 0.8em;
+            color: #ffd700;
+            margin-top: 5px;
+        }
+        .prop-select-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .prop-select-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 15px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        .prop-select-item:hover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #ffd700;
+            transform: translateY(-3px);
+        }
+        .prop-select-item img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .prop-select-name {
+            font-size: 0.9em;
+            color: #fff;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .prop-select-desc {
+            font-size: 0.7em;
+            color: #aaa;
+        }
+        .ad-loading {
+            text-align: center;
+            padding: 20px;
+        }
+        .ad-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(231, 76, 60, 0.3);
+            border-top-color: #e74c3c;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .game-board {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+            aspect-ratio: 1;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 12px;
+            height: 100%;
+        }
+        .cell {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .cell.empty {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .cell.selected {
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        .cell.target {
+            border: 3px solid #00d2ff;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
+        }
+        .tile {
+            position: absolute;
+            width: 90%;
+            height: 90%;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+            animation: pop 0.2s ease;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        @keyframes pop {
+            0% { transform: scale(0); opacity: 0; }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .tile-image-wrapper {
+            position: relative;
+            width: 85%;
+            height: 85%;
+        }
+        .tile-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+        }
+        .corner-badge {
+            position: absolute;
+            bottom: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #ff0000 0%, #cc0000 50%, #ff3333 100%);
+            color: #fff;
+            font-size: 0.85em;
+            font-weight: bold;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(255, 0, 0, 0.5), 0 0 10px rgba(255, 0, 0, 0.3);
+            border: 2px solid #fff;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            border: none;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(17, 153, 142, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .legend {
+            margin-top: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .legend h3 {
+            color: #00d2ff;
+            margin-bottom: 12px;
+            font-size: 1em;
+            text-align: center;
+        }
+        .legend-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+        }
+        .legend-item {
+            text-align: center;
+        }
+        .legend-image-wrapper {
+            position: relative;
+            width: 45px;
+            height: 45px;
+            margin: 0 auto;
+        }
+        .legend-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .legend-item .name {
+            font-size: 0.6em;
+            color: #aaa;
+            margin-top: 3px;
+        }
+        .game-over-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        .game-over-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        .game-over-content {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 25px;
+            padding: 35px;
+            text-align: center;
+            max-width: 340px;
+            width: 90%;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+        }
+        .game-over-content h2 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+        .game-over-content p {
+            color: #aaa;
+            margin-bottom: 20px;
+            font-size: 1em;
+        }
+        .final-score {
+            font-size: 2.2em;
+            font-weight: bold;
+            color: #38ef7d;
+            margin-bottom: 20px;
+        }
+        .victory-badge {
+            font-size: 3.5em;
+            margin-bottom: 12px;
+        }
+        .prop-hint {
+            background: rgba(255, 215, 0, 0.2);
+            border: 1px solid rgba(255, 215, 0, 0.4);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #ffd700;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>🐉 萌兽合成大闯关</h1>
+            <p>合成东方龙，挑战最高分！</p>
+        </div>
+        
+        <div class="score-panel">
+            <div class="score-box">
+                <label>当前分数</label>
+                <div class="value" id="score">0</div>
+            </div>
+            <div class="score-box">
+                <label>最高分</label>
+                <div class="value" id="bestScore">0</div>
+            </div>
+        </div>
+        
+        <div class="props-panel">
+            <div class="prop-btn" id="propHammer" onclick="selectProp('hammer')">
+                <img class="prop-icon" src="prop_images/破阵锤.png" alt="破阵锤"/>
+                <div class="prop-name">破阵锤</div>
+                <div class="prop-count">x<span id="hammerCount">0</span></div>
+            </div>
+            <div class="prop-btn" id="propSwap" onclick="selectProp('swap')">
+                <img class="prop-icon" src="prop_images/换位符.png" alt="换位符"/>
+                <div class="prop-name">换位符</div>
+                <div class="prop-count">x<span id="swapCount">0</span></div>
+            </div>
+            <div class="prop-btn" id="propUpgrade" onclick="selectProp('upgrade')">
+                <img class="prop-icon" src="prop_images/升阶丹.png" alt="升阶丹"/>
+                <div class="prop-name">升阶丹</div>
+                <div class="prop-count">x<span id="upgradeCount">0</span></div>
+            </div>
+        </div>
+        
+        <div class="get-props-panel">
+            <button class="btn-ad" onclick="watchAd()">
+                <span class="btn-ad-icon">📺</span>
+                <span>观看广告</span>
+            </button>
+            <button class="btn-share" onclick="shareToWechat()" id="shareBtn">
+                <span class="btn-share-icon">📱</span>
+                <span>分享微信</span>
+            </button>
+            <div class="share-count" id="shareCount">今日剩余 3 次</div>
+        </div>
+        
+        <div class="prop-hint" id="propHint" style="display: none;"></div>
+        
+        <div class="game-board">
+            <div class="grid" id="grid">
+                <div class="cell empty" onclick="handleCellClick(0, 0)"></div>
+                <div class="cell empty" onclick="handleCellClick(0, 1)"></div>
+                <div class="cell empty" onclick="handleCellClick(0, 2)"></div>
+                <div class="cell empty" onclick="handleCellClick(0, 3)"></div>
+                <div class="cell empty" onclick="handleCellClick(1, 0)"></div>
+                <div class="cell empty" onclick="handleCellClick(1, 1)"></div>
+                <div class="cell empty" onclick="handleCellClick(1, 2)"></div>
+                <div class="cell empty" onclick="handleCellClick(1, 3)"></div>
+                <div class="cell empty" onclick="handleCellClick(2, 0)"></div>
+                <div class="cell empty" onclick="handleCellClick(2, 1)"></div>
+                <div class="cell empty" onclick="handleCellClick(2, 2)"></div>
+                <div class="cell empty" onclick="handleCellClick(2, 3)"></div>
+                <div class="cell empty" onclick="handleCellClick(3, 0)"></div>
+                <div class="cell empty" onclick="handleCellClick(3, 1)"></div>
+                <div class="cell empty" onclick="handleCellClick(3, 2)"></div>
+                <div class="cell empty" onclick="handleCellClick(3, 3)"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn btn-primary" onclick="newGame()">🎮 新游戏</button>
+            <button class="btn btn-secondary" onclick="showRules()">📖 规则</button>
+        </div>
+        
+        <div class="legend">
+            <h3>神兽等级（从大到小）</h3>
+            <div class="legend-grid">
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/12-东方龙.png" alt="东方龙"/><div class="corner-badge">12</div></div><div class="name">东方龙</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/11-白头鹰.png" alt="白头鹰"/><div class="corner-badge">11</div></div><div class="name">白头鹰</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/10-毛熊.png" alt="毛熊"/><div class="corner-badge">10</div></div><div class="name">毛熊</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/9-约翰牛.png" alt="约翰牛"/><div class="corner-badge">9</div></div><div class="name">约翰牛</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/8-高卢鸡.png" alt="高卢鸡"/><div class="corner-badge">8</div></div><div class="name">高卢鸡</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/7-汉斯猫.png" alt="汉斯猫"/><div class="corner-badge">7</div></div><div class="name">汉斯猫</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/6-白象.png" alt="白象"/><div class="corner-badge">6</div></div><div class="name">白象</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/5-骆驼.png" alt="骆驼"/><div class="corner-badge">5</div></div><div class="name">骆驼</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/4-巴巴羊.png" alt="巴巴羊"/><div class="corner-badge">4</div></div><div class="name">巴巴羊</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/3-袋鼠.png" alt="袋鼠"/><div class="corner-badge">3</div></div><div class="name">袋鼠</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/2-棒子.png" alt="棒子"/><div class="corner-badge">2</div></div><div class="name">棒子</div></div>
+                <div class="legend-item"><div class="legend-image-wrapper"><img src="game_images/1-脚盆鸡.png" alt="脚盆鸡"/><div class="corner-badge">1</div></div><div class="name">脚盆鸡</div></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-content">
+            <div class="victory-badge" id="victoryBadge">🐉</div>
+            <h2 id="gameOverTitle">恭喜获胜！</h2>
+            <p id="gameOverMessage">你合成了东方龙！</p>
+            <div class="final-score" id="finalScore">0</div>
+            <button class="btn btn-primary" onclick="newGame(); hideGameOver()">再来一局</button>
+        </div>
+    </div>
+    
+    <div class="game-over-overlay" id="rulesOverlay">
+        <div class="game-over-content" style="max-width: 400px;">
+            <h2>📖 游戏规则</h2>
+            <ul style="text-align: left; margin-bottom: 20px; color: #aaa; font-size: 0.9em; line-height: 1.8;">
+                <li>使用 <strong>↑↓←→</strong> 方向键或 <strong>WASD</strong> 控制移动</li>
+                <li>相同神兽碰撞会合并成更高级的神兽</li>
+                <li>脚盆鸡(1) → 棒子(2) → 袋鼠(3) → 巴巴羊(4) → 骆驼(5) → 白象(6)</li>
+                <li>汉斯猫(7) → 高卢鸡(8) → 约翰牛(9) → 毛熊(10) → 白头鹰(11) → 东方龙(12)</li>
+                <li>合成东方龙即可获胜！</li>
+                <li>无法移动时游戏结束</li>
+            </ul>
+            <h3 style="color: #ffd700; margin-bottom: 10px; font-size: 1em;">🎁 道具说明</h3>
+            <ul style="text-align: left; margin-bottom: 20px; color: #aaa; font-size: 0.9em; line-height: 1.8;">
+                <li><strong>🔨 破阵锤：</strong>点击消除单张卡牌</li>
+                <li><strong>🔄 换位符：</strong>互换两张卡牌位置</li>
+                <li><strong>⬆️ 升阶丹：</strong>提升单张卡牌1个等级</li>
+            </ul>
+            <h3 style="color: #27ae60; margin-bottom: 10px; font-size: 1em;">📺 获取道具</h3>
+            <ul style="text-align: left; margin-bottom: 20px; color: #aaa; font-size: 0.9em; line-height: 1.8;">
+                <li><strong>📺 观看广告：</strong>可获得任意一个道具（不限次数）</li>
+                <li><strong>📱 分享微信：</strong>可获得任意一个道具（每日3次）</li>
+            </ul>
+            <button class="btn btn-secondary" onclick="hideRules()">知道了</button>
+        </div>
+    </div>
+    
+    <div class="game-over-overlay" id="propSelectOverlay">
+        <div class="game-over-content" style="max-width: 380px;">
+            <h2 style="color: #ffd700; margin-bottom: 15px;">🎁 选择一个道具</h2>
+            <p style="color: #aaa; margin-bottom: 20px; font-size: 0.9em;">恭喜获得道具！请选择其中一个：</p>
+            <div class="prop-select-grid">
+                <div class="prop-select-item" onclick="selectPropFromAd('hammer')">
+                    <img src="prop_images/破阵锤.png" alt="破阵锤"/>
+                    <div class="prop-select-name">破阵锤</div>
+                    <div class="prop-select-desc">消除单张卡牌</div>
+                </div>
+                <div class="prop-select-item" onclick="selectPropFromAd('swap')">
+                    <img src="prop_images/换位符.png" alt="换位符"/>
+                    <div class="prop-select-name">换位符</div>
+                    <div class="prop-select-desc">互换两张卡牌</div>
+                </div>
+                <div class="prop-select-item" onclick="selectPropFromAd('upgrade')">
+                    <img src="prop_images/升阶丹.png" alt="升阶丹"/>
+                    <div class="prop-select-name">升阶丹</div>
+                    <div class="prop-select-desc">提升1个等级</div>
+                </div>
+            </div>
+            <button class="btn btn-secondary" style="margin-top: 15px;" onclick="hidePropSelect()">取消</button>
+        </div>
+    </div>
+    
+    <div class="game-over-overlay" id="adOverlay">
+        <div class="game-over-content" style="max-width: 320px;">
+            <h2 style="color: #e74c3c; margin-bottom: 15px;">📺 观看广告中</h2>
+            <div class="ad-loading">
+                <div class="ad-spinner"></div>
+                <p style="color: #aaa; margin-top: 15px;">正在加载广告...</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const TILES = {
+            1: { name: '脚盆鸡', file: '1-脚盆鸡.png' },
+            2: { name: '棒子', file: '2-棒子.png' },
+            3: { name: '袋鼠', file: '3-袋鼠.png' },
+            4: { name: '巴巴羊', file: '4-巴巴羊.png' },
+            5: { name: '骆驼', file: '5-骆驼.png' },
+            6: { name: '白象', file: '6-白象.png' },
+            7: { name: '汉斯猫', file: '7-汉斯猫.png' },
+            8: { name: '高卢鸡', file: '8-高卢鸡.png' },
+            9: { name: '约翰牛', file: '9-约翰牛.png' },
+            10: { name: '毛熊', file: '10-毛熊.png' },
+            11: { name: '白头鹰', file: '11-白头鹰.png' },
+            12: { name: '东方龙', file: '12-东方龙.png' }
+        };
+        
+        const GRID_SIZE = 4;
+        const EMPTY = null;
+        const MAX_LEVEL = 12;
+        
+        let grid;
+        let score = 0;
+        let bestScore = 0;
+        let hasWon = false;
+        let props = { hammer: 0, swap: 0, upgrade: 0 };
+        let selectedProp = null;
+        let selectedCell = null;
+        let shareCount = 0;
+        let lastShareDate = null;
+        
+        function init() {
+            loadBestScore();
+            loadShareCount();
+            newGame();
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        
+        function loadShareCount() {
+            const today = new Date().toDateString();
+            const saved = localStorage.getItem('萌兽合成_share_data');
+            if (saved) {
+                const data = JSON.parse(saved);
+                if (data.date === today) {
+                    shareCount = data.count;
+                } else {
+                    shareCount = 0;
+                }
+            }
+            updateShareCountUI();
+        }
+        
+        function saveShareCount() {
+            const today = new Date().toDateString();
+            localStorage.setItem('萌兽合成_share_data', JSON.stringify({ date: today, count: shareCount }));
+        }
+        
+        function updateShareCountUI() {
+            document.getElementById('shareCount').textContent = `今日剩余 ${3 - shareCount} 次`;
+        }
+        
+        function newGame() {
+            grid = createEmptyGrid();
+            score = 0;
+            hasWon = false;
+            props = { hammer: 0, swap: 0, upgrade: 0 };
+            selectedProp = null;
+            selectedCell = null;
+            document.getElementById('score').textContent = score;
+            updatePropUI();
+            addRandomTile();
+            addRandomTile();
+            renderGrid();
+            clearPropSelection();
+        }
+        
+        function watchAd() {
+            document.getElementById('adOverlay').classList.add('show');
+            setTimeout(() => {
+                document.getElementById('adOverlay').classList.remove('show');
+                showPropSelect();
+            }, 3000);
+        }
+        
+        function shareToWechat() {
+            if (shareCount >= 3) {
+                alert('今日分享次数已用完，明天再来吧！');
+                return;
+            }
+            
+            const shareContent = '🐉 萌兽合成大闯关 - 合成东方龙，挑战最高分！';
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: '萌兽合成大闯关',
+                    text: shareContent,
+                    url: window.location.href
+                }).then(() => {
+                    shareCount++;
+                    saveShareCount();
+                    updateShareCountUI();
+                    showPropSelect();
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        simulateShare();
+                    }
+                });
+            } else {
+                simulateShare();
+            }
+        }
+        
+        function simulateShare() {
+            if (confirm('分享内容：\n\n' + shareContent + '\n\n点击确定模拟分享成功！')) {
+                shareCount++;
+                saveShareCount();
+                updateShareCountUI();
+                showPropSelect();
+            }
+        }
+        
+        function showPropSelect() {
+            document.getElementById('propSelectOverlay').classList.add('show');
+        }
+        
+        function hidePropSelect() {
+            document.getElementById('propSelectOverlay').classList.remove('show');
+        }
+        
+        function selectPropFromAd(prop) {
+            props[prop]++;
+            updatePropUI();
+            hidePropSelect();
+        }
+        
+        function loadBestScore() {
+            const saved = localStorage.getItem('萌兽合成_best_score');
+            if (saved) {
+                bestScore = parseInt(saved);
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+        }
+        
+        function saveBestScore() {
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('萌兽合成_best_score', bestScore.toString());
+                document.getElementById('bestScore').textContent = bestScore;
+            }
+        }
+        
+        function createEmptyGrid() {
+            return Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(EMPTY));
+        }
+        
+        function addRandomTile() {
+            const emptyCells = [];
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === EMPTY) {
+                        emptyCells.push({ row: i, col: j });
+                    }
+                }
+            }
+            
+            if (emptyCells.length === 0) return false;
+            
+            const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
+            const rand = Math.random();
+            let randomValue;
+            if (rand < 0.35) randomValue = 1;
+            else if (rand < 0.63) randomValue = 2;
+            else if (rand < 0.83) randomValue = 3;
+            else if (rand < 0.93) randomValue = 4;
+            else if (rand < 0.98) randomValue = 5;
+            else randomValue = 6;
+            grid[randomCell.row][randomCell.col] = randomValue;
+            return true;
+        }
+        
+        function renderGrid() {
+            const cells = document.querySelectorAll('.cell');
+            let index = 0;
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    const value = grid[i][j];
+                    const cell = cells[index];
+                    cell.className = 'cell';
+                    cell.onclick = (function(row, col) {
+                        return function() { handleCellClick(row, col); };
+                    })(i, j);
+                    
+                    if (value === EMPTY) {
+                        cell.classList.add('empty');
+                        cell.innerHTML = '';
+                    } else {
+                        cell.innerHTML = `<div class="tile"><div class="tile-image-wrapper"><img class="tile-image" src="game_images/${TILES[value].file}" alt="${TILES[value].name}"/><div class="corner-badge">${value}</div></div></div>`;
+                    }
+                    index++;
+                }
+            }
+        }
+        
+        function selectProp(prop) {
+            if (props[prop] <= 0) return;
+            
+            clearPropSelection();
+            selectedProp = prop;
+            document.getElementById('prop' + prop.charAt(0).toUpperCase() + prop.slice(1)).classList.add('active');
+            
+            const hint = document.getElementById('propHint');
+            hint.style.display = 'block';
+            
+            if (prop === 'hammer') {
+                hint.innerHTML = '🔨 破阵锤：点击要消除的卡牌';
+            } else if (prop === 'swap') {
+                hint.innerHTML = '🔄 换位符：依次点击两张要互换的卡牌';
+            } else if (prop === 'upgrade') {
+                hint.innerHTML = '⬆️ 升阶丹：点击要升级的卡牌';
+            }
+        }
+        
+        function clearPropSelection() {
+            selectedProp = null;
+            selectedCell = null;
+            document.querySelectorAll('.prop-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.cell').forEach(cell => {
+                cell.classList.remove('selected', 'target');
+            });
+            document.getElementById('propHint').style.display = 'none';
+        }
+        
+        function handleCellClick(row, col) {
+            if (selectedProp === null) return;
+            
+            if (grid[row][col] === EMPTY) {
+                clearPropSelection();
+                return;
+            }
+            
+            if (selectedProp === 'hammer') {
+                useHammer(row, col);
+            } else if (selectedProp === 'swap') {
+                useSwap(row, col);
+            } else if (selectedProp === 'upgrade') {
+                useUpgrade(row, col);
+            }
+        }
+        
+        function useHammer(row, col) {
+            grid[row][col] = EMPTY;
+            props.hammer--;
+            updatePropUI();
+            clearPropSelection();
+            renderGrid();
+            
+            if (checkWin()) {
+                hasWon = true;
+                showWin();
+            } else if (checkGameOver()) {
+                saveBestScore();
+                showGameOver(false);
+            }
+        }
+        
+        function useSwap(row, col) {
+            if (selectedCell === null) {
+                selectedCell = { row, col };
+                const cells = document.querySelectorAll('.cell');
+                const index = row * GRID_SIZE + col;
+                cells[index].classList.add('selected');
+            } else {
+                const temp = grid[selectedCell.row][selectedCell.col];
+                grid[selectedCell.row][selectedCell.col] = grid[row][col];
+                grid[row][col] = temp;
+                
+                props.swap--;
+                updatePropUI();
+                clearPropSelection();
+                renderGrid();
+            }
+        }
+        
+        function useUpgrade(row, col) {
+            if (grid[row][col] < MAX_LEVEL) {
+                grid[row][col]++;
+                props.upgrade--;
+                updatePropUI();
+                clearPropSelection();
+                renderGrid();
+                
+                if (checkWin()) {
+                    hasWon = true;
+                    showWin();
+                }
+            } else {
+                clearPropSelection();
+            }
+        }
+        
+        function updatePropUI() {
+            document.getElementById('hammerCount').textContent = props.hammer;
+            document.getElementById('swapCount').textContent = props.swap;
+            document.getElementById('upgradeCount').textContent = props.upgrade;
+            
+            if (props.hammer <= 0) {
+                document.getElementById('propHammer').classList.add('disabled');
+            } else {
+                document.getElementById('propHammer').classList.remove('disabled');
+            }
+            
+            if (props.swap <= 0) {
+                document.getElementById('propSwap').classList.add('disabled');
+            } else {
+                document.getElementById('propSwap').classList.remove('disabled');
+            }
+            
+            if (props.upgrade <= 0) {
+                document.getElementById('propUpgrade').classList.add('disabled');
+            } else {
+                document.getElementById('propUpgrade').classList.remove('disabled');
+            }
+        }
+        
+        function handleKeyDown(e) {
+            if (hasWon) return;
+            if (selectedProp !== null) {
+                clearPropSelection();
+                return;
+            }
+            
+            const key = e.key;
+            let moved = false;
+            
+            switch (key) {
+                case 'ArrowUp':
+                case 'w':
+                case 'W':
+                    moved = moveUp();
+                    break;
+                case 'ArrowDown':
+                case 's':
+                case 'S':
+                    moved = moveDown();
+                    break;
+                case 'ArrowLeft':
+                case 'a':
+                case 'A':
+                    moved = moveLeft();
+                    break;
+                case 'ArrowRight':
+                case 'd':
+                case 'D':
+                    moved = moveRight();
+                    break;
+            }
+            
+            if (moved) {
+                setTimeout(() => {
+                    addRandomTile();
+                    renderGrid();
+                    
+                    if (checkWin()) {
+                        hasWon = true;
+                        showWin();
+                    } else if (checkGameOver()) {
+                        saveBestScore();
+                        showGameOver(false);
+                    }
+                }, 100);
+            }
+        }
+        
+        function moveLeft() {
+            let moved = false;
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const row = grid[i].filter(cell => cell !== EMPTY);
+                const merged = [];
+                let j = 0;
+                
+                while (j < row.length) {
+                    if (j + 1 < row.length && row[j] === row[j + 1] && row[j] < MAX_LEVEL) {
+                        const newValue = row[j] + 1;
+                        merged.push(newValue);
+                        score += newValue * 10;
+                        moved = true;
+                        j += 2;
+                    } else {
+                        merged.push(row[j]);
+                        j++;
+                    }
+                }
+                
+                while (merged.length < GRID_SIZE) {
+                    merged.push(EMPTY);
+                }
+                
+                for (let k = 0; k < GRID_SIZE; k++) {
+                    if (grid[i][k] !== merged[k]) {
+                        moved = true;
+                    }
+                    grid[i][k] = merged[k];
+                }
+            }
+            
+            if (moved) {
+                document.getElementById('score').textContent = score;
+            }
+            
+            return moved;
+        }
+        
+        function moveRight() {
+            let moved = false;
+            
+            for (let i = 0; i < GRID_SIZE; i++) {
+                const row = grid[i].filter(cell => cell !== EMPTY);
+                const merged = [];
+                let j = row.length - 1;
+                
+                while (j >= 0) {
+                    if (j - 1 >= 0 && row[j] === row[j - 1] && row[j] < MAX_LEVEL) {
+                        const newValue = row[j] + 1;
+                        merged.unshift(newValue);
+                        score += newValue * 10;
+                        moved = true;
+                        j -= 2;
+                    } else {
+                        merged.unshift(row[j]);
+                        j--;
+                    }
+                }
+                
+                while (merged.length < GRID_SIZE) {
+                    merged.unshift(EMPTY);
+                }
+                
+                for (let k = 0; k < GRID_SIZE; k++) {
+                    if (grid[i][k] !== merged[k]) {
+                        moved = true;
+                    }
+                    grid[i][k] = merged[k];
+                }
+            }
+            
+            if (moved) {
+                document.getElementById('score').textContent = score;
+            }
+            
+            return moved;
+        }
+        
+        function moveUp() {
+            let moved = false;
+            
+            for (let j = 0; j < GRID_SIZE; j++) {
+                const column = [];
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (grid[i][j] !== EMPTY) {
+                        column.push(grid[i][j]);
+                    }
+                }
+                
+                const merged = [];
+                let k = 0;
+                
+                while (k < column.length) {
+                    if (k + 1 < column.length && column[k] === column[k + 1] && column[k] < MAX_LEVEL) {
+                        const newValue = column[k] + 1;
+                        merged.push(newValue);
+                        score += newValue * 10;
+                        moved = true;
+                        k += 2;
+                    } else {
+                        merged.push(column[k]);
+                        k++;
+                    }
+                }
+                
+                while (merged.length < GRID_SIZE) {
+                    merged.push(EMPTY);
+                }
+                
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (grid[i][j] !== merged[i]) {
+                        moved = true;
+                    }
+                    grid[i][j] = merged[i];
+                }
+            }
+            
+            if (moved) {
+                document.getElementById('score').textContent = score;
+            }
+            
+            return moved;
+        }
+        
+        function moveDown() {
+            let moved = false;
+            
+            for (let j = 0; j < GRID_SIZE; j++) {
+                const column = [];
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (grid[i][j] !== EMPTY) {
+                        column.push(grid[i][j]);
+                    }
+                }
+                
+                const merged = [];
+                let k = column.length - 1;
+                
+                while (k >= 0) {
+                    if (k - 1 >= 0 && column[k] === column[k - 1] && column[k] < MAX_LEVEL) {
+                        const newValue = column[k] + 1;
+                        merged.unshift(newValue);
+                        score += newValue * 10;
+                        moved = true;
+                        k -= 2;
+                    } else {
+                        merged.unshift(column[k]);
+                        k--;
+                    }
+                }
+                
+                while (merged.length < GRID_SIZE) {
+                    merged.unshift(EMPTY);
+                }
+                
+                for (let i = 0; i < GRID_SIZE; i++) {
+                    if (grid[i][j] !== merged[i]) {
+                        moved = true;
+                    }
+                    grid[i][j] = merged[i];
+                }
+            }
+            
+            if (moved) {
+                document.getElementById('score').textContent = score;
+            }
+            
+            return moved;
+        }
+        
+        function checkWin() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === MAX_LEVEL) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        function checkGameOver() {
+            for (let i = 0; i < GRID_SIZE; i++) {
+                for (let j = 0; j < GRID_SIZE; j++) {
+                    if (grid[i][j] === EMPTY) {
+                        return false;
+                    }
+                    
+                    if (j < GRID_SIZE - 1 && grid[i][j] === grid[i][j + 1]) {
+                        return false;
+                    }
+                    
+                    if (i < GRID_SIZE - 1 && grid[i][j] === grid[i + 1][j]) {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        
+        function showWin() {
+            const overlay = document.getElementById('gameOverOverlay');
+            document.getElementById('victoryBadge').textContent = '🐉';
+            document.getElementById('gameOverTitle').textContent = '恭喜获胜！';
+            document.getElementById('gameOverMessage').textContent = '你合成了东方龙！';
+            document.getElementById('finalScore').textContent = score;
+            overlay.classList.add('show');
+            saveBestScore();
+        }
+        
+        function showGameOver(victory) {
+            const overlay = document.getElementById('gameOverOverlay');
+            document.getElementById('victoryBadge').textContent = victory ? '🐉' : '😢';
+            document.getElementById('gameOverTitle').textContent = victory ? '恭喜获胜！' : '游戏结束';
+            document.getElementById('gameOverMessage').textContent = victory ? '你合成了东方龙！' : '没有可移动的空间了';
+            document.getElementById('finalScore').textContent = score;
+            overlay.classList.add('show');
+        }
+        
+        function hideGameOver() {
+            document.getElementById('gameOverOverlay').classList.remove('show');
+        }
+        
+        function showRules() {
+            document.getElementById('rulesOverlay').classList.add('show');
+        }
+        
+        function hideRules() {
+            document.getElementById('rulesOverlay').classList.remove('show');
+        }
+        
+        init();
+        
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then((registration) => {
+                        console.log('Service Worker registered:', registration);
+                    })
+                    .catch((error) => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
